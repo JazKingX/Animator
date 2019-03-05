@@ -1,0 +1,61 @@
+import UIKit
+
+weak var viewTopConstraint: NSLayoutConstraint!
+weak var visualEffectView: UIVisualEffectView!
+weak var cardView: UIView!
+
+var initialTouchPoint: CGPoint = CGPoint(x: 0,y: 0)
+
+func update(_ translation: CGPoint, origin: CGPoint) {
+    
+    let offSetY = translation.y
+    
+    cardView.frame.origin.y = offSetY
+    
+    let multiplier = 1 - (translation.y / 2000)
+    visualEffectView.alpha = multiplier
+}
+
+func cancel(_ origin: CGPoint) {
+    
+    let animator = UIViewPropertyAnimator(duration: 0.6, dampingRatio: 0.6) {
+        visualEffectView.alpha = 1
+        cardView.alpha = 1.0
+        cardView.center = origin
+    }
+    animator.startAnimation()
+}
+
+func finish() {
+    let animator = UIViewPropertyAnimator(duration: 0.9, dampingRatio: 0.9) {
+        visualEffectView.effect = nil
+    }
+    animator.startAnimation()
+}
+
+func panGestureAction(_ sender: UIPanGestureRecognizer) {
+    
+    let originalCardPosition = cardView.center
+    
+    let translation = sender.translation(in: cardView)
+    let origin = sender.location(in: cardView)
+    
+    switch sender.state {
+    case .changed:
+        
+         if translation.y > 50 { update(translation, origin: origin) }
+        
+    case .ended:
+         let translation = sender.translation(in: cardView)
+         if translation.y > 100 {
+            finish()
+        } else {
+            cardView.alpha = 1.0
+            cancel(originalCardPosition)
+        }
+    case .cancelled:
+        cancel(originalCardPosition)
+    default: break
+    }
+    
+}
